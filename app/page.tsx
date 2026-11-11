@@ -1,4 +1,3 @@
-```tsx
 "use client";
 
 import { useState } from "react";
@@ -37,416 +36,551 @@ export default function Home() {
           min-height: 100vh;
           overflow: hidden;
           background:
-            radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.22), transparent 35%),
+            radial-gradient(
+              circle at 15% 10%,
+              rgba(111, 55, 255, 0.16),
+              transparent 30%
+            ),
+            radial-gradient(
+              circle at 85% 35%,
+              rgba(219, 39, 119, 0.09),
+              transparent 28%
+            ),
             #09090f;
         }
 
         .container {
-          width: min(1180px, calc(100% - 40px));
+          width: min(1160px, 90%);
           margin: 0 auto;
         }
 
         .navbar {
-          min-height: 76px;
+          height: 82px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-bottom: 1px solid rgba(255,255,255,0.08);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.07);
           position: relative;
+          z-index: 20;
         }
 
         .logo {
           display: flex;
           align-items: center;
-          gap: 10px;
-          font-size: 20px;
+          gap: 11px;
+          font-size: 21px;
           font-weight: 800;
-          letter-spacing: -0.5px;
+          letter-spacing: -0.7px;
         }
 
-        .logoMark {
-          width: 34px;
-          height: 34px;
+        .logo-icon {
+          width: 38px;
+          height: 38px;
           display: grid;
           place-items: center;
-          border-radius: 10px;
+          border-radius: 12px;
           background: linear-gradient(135deg, #8b5cf6, #ec4899);
-          box-shadow: 0 8px 30px rgba(139, 92, 246, 0.35);
+          font-size: 21px;
+          box-shadow: 0 5px 25px rgba(139, 92, 246, 0.3);
         }
 
-        .navLinks {
+        .logo span:last-child {
+          background: linear-gradient(90deg, #ffffff, #c4b5fd);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+
+        .nav-links {
           display: flex;
           align-items: center;
           gap: 34px;
-          color: #b8b5c7;
+        }
+
+        .nav-links a {
+          color: #aaa6bb;
           font-size: 14px;
+          transition: color 0.2s;
         }
 
-        .navLinks a:hover,
-        .signIn:hover {
-          color: white;
+        .nav-links a:hover {
+          color: #ffffff;
         }
 
-        .navActions {
+        .nav-actions {
           display: flex;
           align-items: center;
-          gap: 14px;
+          gap: 22px;
         }
 
-        .signIn {
-          color: #d6d3df;
-          padding: 10px 14px;
+        .sign-in {
+          color: #d1cbdc;
           font-size: 14px;
         }
 
-        .primary {
+        .sign-in:hover {
+          color: #ffffff;
+        }
+
+        .button {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          border: 0;
-          cursor: pointer;
-          color: white;
-          font-weight: 700;
+          gap: 9px;
+          padding: 13px 22px;
+          border: none;
           border-radius: 10px;
-          padding: 12px 19px;
-          background: linear-gradient(135deg, #7c3aed, #db2777);
-          box-shadow: 0 12px 35px rgba(124, 58, 237, 0.25);
-          transition: transform 0.2s ease, opacity 0.2s ease;
+          background: linear-gradient(110deg, #8b5cf6, #d946ef);
+          color: white;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+          transition:
+            transform 0.2s,
+            box-shadow 0.2s;
+          box-shadow: 0 7px 25px rgba(139, 92, 246, 0.2);
         }
 
-        .primary:hover {
+        .button:hover {
           transform: translateY(-2px);
-          opacity: 0.92;
+          box-shadow: 0 10px 30px rgba(139, 92, 246, 0.35);
+        }
+
+        .button-outline {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 13px 22px;
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          border-radius: 10px;
+          color: #ffffff;
+          font-size: 14px;
+          font-weight: 600;
+          transition: background 0.2s;
+        }
+
+        .button-outline:hover {
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .menu-button {
+          display: none;
+          background: transparent;
+          border: 0;
+          color: white;
+          font-size: 27px;
+          cursor: pointer;
+        }
+
+        .mobile-menu {
+          display: none;
         }
 
         .hero {
-          text-align: center;
           padding: 105px 0 90px;
+          text-align: center;
+          position: relative;
         }
 
         .badge {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 8px 13px;
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 999px;
-          color: #c9c3d8;
-          background: rgba(255,255,255,0.035);
-          font-size: 13px;
-          margin-bottom: 28px;
+          padding: 9px 15px;
+          border: 1px solid rgba(167, 139, 250, 0.25);
+          border-radius: 30px;
+          background: rgba(139, 92, 246, 0.09);
+          color: #c4b5fd;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 1px;
+          text-transform: uppercase;
+          margin-bottom: 27px;
         }
 
-        .dot {
+        .badge-dot {
           width: 7px;
           height: 7px;
           border-radius: 50%;
-          background: #a78bfa;
-          box-shadow: 0 0 15px #a78bfa;
+          background: #c084fc;
+          box-shadow: 0 0 12px #c084fc;
         }
 
         .hero h1 {
           max-width: 900px;
           margin: 0 auto;
-          font-size: clamp(48px, 8vw, 92px);
-          line-height: 0.98;
-          letter-spacing: -5px;
+          font-size: clamp(43px, 7vw, 78px);
+          line-height: 1.08;
+          letter-spacing: -4px;
+          font-weight: 800;
         }
 
-        .gradientText {
-          background: linear-gradient(90deg, #a78bfa, #f472b6, #fb7185);
+        .gradient-text {
+          background: linear-gradient(
+            100deg,
+            #a78bfa 10%,
+            #e879f9 55%,
+            #fb7185 100%
+          );
           -webkit-background-clip: text;
           background-clip: text;
           color: transparent;
         }
 
-        .hero p {
-          max-width: 680px;
-          margin: 30px auto 0;
-          color: #aaa6b7;
-          font-size: 19px;
-          line-height: 1.7;
+        .hero-description {
+          max-width: 650px;
+          margin: 25px auto 0;
+          color: #aaa6bb;
+          font-size: 17px;
+          line-height: 1.8;
         }
 
-        .heroActions {
+        .hero-buttons {
           display: flex;
           justify-content: center;
           gap: 14px;
-          margin-top: 36px;
+          margin-top: 35px;
+          flex-wrap: wrap;
         }
 
-        .heroButton {
-          padding: 15px 25px;
-          border-radius: 12px;
-          font-size: 16px;
-        }
-
-        .secondary {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          border: 1px solid rgba(255,255,255,0.13);
-          background: rgba(255,255,255,0.045);
-          color: white;
-          padding: 15px 25px;
-          border-radius: 12px;
+        .hero-note {
+          margin-top: 22px;
+          color: #777386;
+          font-size: 12px;
         }
 
         .showcase {
-          margin: 15px auto 0;
-          width: min(1050px, 100%);
-          border: 1px solid rgba(255,255,255,0.1);
-          border-radius: 22px;
-          background: rgba(255,255,255,0.035);
-          padding: 12px;
-          box-shadow: 0 40px 100px rgba(0,0,0,0.45);
+          padding: 25px 0 105px;
         }
 
-        .window {
-          border-radius: 15px;
-          min-height: 390px;
-          padding: 25px;
-          text-align: left;
-          background: linear-gradient(145deg, #15121e, #0e0e16);
-        }
-
-        .windowTop {
-          display: flex;
-          gap: 7px;
-          margin-bottom: 30px;
-        }
-
-        .windowDot {
-          width: 9px;
-          height: 9px;
-          border-radius: 50%;
-          background: #464252;
-        }
-
-        .mockGrid {
+        .showcase-grid {
           display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 18px;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 16px;
         }
 
-        .mockCard {
-          min-height: 145px;
-          padding: 22px;
-          border-radius: 16px;
-          border: 1px solid rgba(255,255,255,0.07);
-          background: rgba(255,255,255,0.035);
+        .showcase-card {
+          min-height: 205px;
+          padding: 24px;
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          border-radius: 17px;
+          background: linear-gradient(
+            145deg,
+            rgba(255, 255, 255, 0.065),
+            rgba(255, 255, 255, 0.018)
+          );
+          transition:
+            transform 0.25s,
+            border-color 0.25s;
         }
 
-        .mockCard h3 {
-          margin: 0 0 10px;
-          font-size: 19px;
+        .showcase-card:hover {
+          transform: translateY(-5px);
+          border-color: rgba(167, 139, 250, 0.45);
         }
 
-        .mockCard p {
-          margin: 0;
-          color: #888495;
-          font-size: 14px;
-          line-height: 1.6;
-        }
-
-        section {
-          padding: 100px 0;
-        }
-
-        .sectionHeading {
-          text-align: center;
-          margin-bottom: 55px;
-        }
-
-        .eyebrow {
-          color: #a78bfa;
-          text-transform: uppercase;
-          letter-spacing: 2px;
-          font-size: 12px;
-          font-weight: 800;
-          margin-bottom: 14px;
-        }
-
-        .sectionHeading h2 {
-          margin: 0;
-          font-size: clamp(34px, 5vw, 56px);
-          letter-spacing: -2px;
-        }
-
-        .sectionHeading p {
-          max-width: 620px;
-          margin: 18px auto 0;
-          color: #9995a7;
-          line-height: 1.7;
-        }
-
-        .features {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 18px;
-        }
-
-        .feature {
-          padding: 30px;
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 18px;
-          background: rgba(255,255,255,0.025);
-        }
-
-        .featureIcon {
+        .card-icon {
           width: 48px;
           height: 48px;
           display: grid;
           place-items: center;
           border-radius: 13px;
-          background: rgba(139,92,246,0.14);
-          font-size: 22px;
-          margin-bottom: 24px;
+          margin-bottom: 22px;
+          font-size: 23px;
+          background: rgba(139, 92, 246, 0.16);
         }
 
-        .feature h3 {
+        .showcase-card:nth-child(2) .card-icon {
+          background: rgba(236, 72, 153, 0.14);
+        }
+
+        .showcase-card:nth-child(3) .card-icon {
+          background: rgba(14, 165, 233, 0.14);
+        }
+
+        .showcase-card:nth-child(4) .card-icon {
+          background: rgba(34, 197, 94, 0.13);
+        }
+
+        .showcase-card h3 {
           margin: 0 0 10px;
-          font-size: 20px;
+          font-size: 17px;
         }
 
-        .feature p {
-          color: #9692a3;
-          line-height: 1.7;
+        .showcase-card p {
           margin: 0;
+          color: #9994a9;
+          font-size: 13px;
+          line-height: 1.7;
+        }
+
+        .section {
+          padding: 85px 0;
+        }
+
+        .section-heading {
+          max-width: 650px;
+          margin: 0 auto 50px;
+          text-align: center;
+        }
+
+        .section-label {
+          color: #c4b5fd;
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 2px;
+          text-transform: uppercase;
+        }
+
+        .section-heading h2 {
+          margin: 15px 0;
+          font-size: clamp(30px, 4vw, 45px);
+          letter-spacing: -1.5px;
+        }
+
+        .section-heading p {
+          color: #9994a9;
+          font-size: 15px;
+          line-height: 1.8;
+        }
+
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 18px;
+        }
+
+        .feature-card {
+          padding: 29px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 16px;
+          background: rgba(255, 255, 255, 0.025);
+        }
+
+        .feature-card .card-icon {
+          margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+          margin: 0 0 12px;
+          font-size: 18px;
+        }
+
+        .feature-card p {
+          margin: 0;
+          color: #9994a9;
+          font-size: 14px;
+          line-height: 1.8;
         }
 
         .steps {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
-          gap: 20px;
+          gap: 25px;
         }
 
         .step {
           text-align: center;
-          padding: 35px 25px;
+          padding: 25px;
         }
 
-        .stepNumber {
-          width: 48px;
-          height: 48px;
+        .step-number {
+          width: 54px;
+          height: 54px;
           display: grid;
           place-items: center;
-          margin: 0 auto 20px;
-          border-radius: 50%;
-          background: #181522;
-          border: 1px solid rgba(167,139,250,0.3);
+          margin: 0 auto 22px;
+          border: 1px solid rgba(167, 139, 250, 0.35);
+          border-radius: 16px;
+          background: rgba(139, 92, 246, 0.13);
           color: #c4b5fd;
+          font-size: 20px;
           font-weight: 800;
         }
 
         .step h3 {
-          margin-bottom: 10px;
+          margin: 0 0 12px;
+          font-size: 18px;
         }
 
         .step p {
-          color: #9692a3;
-          line-height: 1.7;
+          margin: 0;
+          color: #9994a9;
+          font-size: 14px;
+          line-height: 1.8;
+        }
+
+        .pricing-box {
+          max-width: 700px;
+          margin: 0 auto;
+          padding: 42px;
+          border: 1px solid rgba(167, 139, 250, 0.25);
+          border-radius: 20px;
+          background: linear-gradient(
+            135deg,
+            rgba(139, 92, 246, 0.12),
+            rgba(236, 72, 153, 0.06)
+          );
+          text-align: center;
+        }
+
+        .pricing-box h3 {
+          margin: 0 0 12px;
+          font-size: 25px;
+        }
+
+        .pricing-box p {
+          color: #aaa6bb;
+          font-size: 14px;
+          line-height: 1.8;
         }
 
         .cta {
-          text-align: center;
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 25px;
-          padding: 80px 30px;
+          padding: 75px 25px;
+          border: 1px solid rgba(167, 139, 250, 0.18);
+          border-radius: 22px;
           background:
-            radial-gradient(circle at 50% 0%, rgba(139,92,246,0.2), transparent 55%),
-            rgba(255,255,255,0.025);
+            radial-gradient(
+              circle at 50% 100%,
+              rgba(139, 92, 246, 0.2),
+              transparent 60%
+            ),
+            rgba(255, 255, 255, 0.025);
+          text-align: center;
         }
 
         .cta h2 {
-          margin: 0;
-          font-size: clamp(36px, 6vw, 65px);
-          letter-spacing: -3px;
+          max-width: 650px;
+          margin: 0 auto 17px;
+          font-size: clamp(32px, 5vw, 48px);
+          letter-spacing: -1.5px;
         }
 
         .cta p {
-          color: #9e9aaa;
-          max-width: 600px;
-          margin: 20px auto 30px;
-          line-height: 1.7;
+          max-width: 550px;
+          margin: 0 auto 28px;
+          color: #aaa6bb;
+          font-size: 15px;
+          line-height: 1.8;
         }
 
-        footer {
-          margin-top: 80px;
+        .footer {
+          margin-top: 100px;
           padding: 35px 0;
-          border-top: 1px solid rgba(255,255,255,0.08);
-          color: #777382;
-          font-size: 13px;
+          border-top: 1px solid rgba(255, 255, 255, 0.07);
         }
 
-        .footerInner {
+        .footer-content {
           display: flex;
           justify-content: space-between;
+          align-items: center;
           gap: 20px;
+          flex-wrap: wrap;
         }
 
-        .mobileButton {
-          display: none;
-          border: 0;
-          background: transparent;
+        .footer p {
+          margin: 0;
+          color: #777386;
+          font-size: 12px;
+        }
+
+        .footer-links {
+          display: flex;
+          gap: 22px;
+        }
+
+        .footer-links a {
+          color: #9994a9;
+          font-size: 12px;
+        }
+
+        .footer-links a:hover {
           color: white;
-          font-size: 25px;
-          cursor: pointer;
         }
 
-        @media (max-width: 760px) {
-          .navLinks,
-          .navActions {
+        @media (max-width: 850px) {
+          .nav-links {
+            gap: 18px;
+          }
+
+          .showcase-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          .features-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+
+        @media (max-width: 650px) {
+          .navbar {
+            height: 72px;
+          }
+
+          .nav-links,
+          .nav-actions {
             display: none;
           }
 
-          .mobileButton {
+          .menu-button {
             display: block;
           }
 
-          .mobileMenu {
+          .mobile-menu {
             position: absolute;
-            top: 76px;
-            left: 20px;
-            right: 20px;
-            padding: 20px;
-            border-radius: 15px;
-            background: #14121c;
-            border: 1px solid rgba(255,255,255,0.1);
-            z-index: 10;
+            top: 72px;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 25px 5%;
+            background: #11101a;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
           }
 
-          .mobileMenu a {
-            display: block;
-            width: 100%;
-            margin: 8px 0;
-            padding: 10px;
+          .mobile-menu a {
+            color: #d1cbdc;
+            font-size: 14px;
           }
 
-          .mobileMenu .primary {
-            width: 100%;
+          .mobile-menu .button {
+            color: white;
           }
 
           .hero {
-            padding: 75px 0 65px;
+            padding: 80px 0 65px;
           }
 
           .hero h1 {
-            letter-spacing: -3px;
+            letter-spacing: -2px;
           }
 
-          .heroActions {
-            flex-direction: column;
+          .hero-description {
+            font-size: 15px;
           }
 
-          .mockGrid,
-          .features,
+          .showcase {
+            padding-bottom: 65px;
+          }
+
+          .showcase-grid,
+          .features-grid,
           .steps {
             grid-template-columns: 1fr;
           }
 
-          .footerInner {
+          .section {
+            padding: 65px 0;
+          }
+
+          .pricing-box {
+            padding: 30px 20px;
+          }
+
+          .footer-content {
             flex-direction: column;
+            text-align: center;
           }
         }
       `}</style>
@@ -454,181 +588,294 @@ export default function Home() {
       <div className="container">
         <header className="navbar">
           <a href="/" className="logo">
-            <span className="logoMark">✦</span>
-            StoryForge AI
+            <span className="logo-icon">✦</span>
+            <span>StoryForge AI</span>
           </a>
 
-          <nav className="navLinks">
+          <nav className="nav-links">
             <a href="#features">Features</a>
             <a href="#how-it-works">How it works</a>
             <a href="#pricing">Pricing</a>
           </nav>
 
-          <div className="navActions">
-            <a href="/login" className="signIn">Sign in</a>
-            <a href="/signup" className="primary">Get Started</a>
+          <div className="nav-actions">
+            <a href="/login" className="sign-in">
+              Sign in
+            </a>
+            <a href="/signup" className="button">
+              Get Started <span>→</span>
+            </a>
           </div>
 
           <button
-            type="button"
-            className="mobileButton"
+            className="menu-button"
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Open menu"
+            aria-label="Toggle navigation menu"
             aria-expanded={menuOpen}
           >
-            ☰
+            {menuOpen ? "✕" : "☰"}
           </button>
         </header>
 
         {menuOpen && (
-          <div className="mobileMenu">
-            <a href="#features" onClick={() => setMenuOpen(false)}>Features</a>
-            <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
-            <a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a>
-            <a href="/login">Sign in</a>
-            <a href="/signup" className="primary">Get Started</a>
-          </div>
+          <nav className="mobile-menu">
+            <a href="#features" onClick={() => setMenuOpen(false)}>
+              Features
+            </a>
+            <a href="#how-it-works" onClick={() => setMenuOpen(false)}>
+              How it works
+            </a>
+            <a href="#pricing" onClick={() => setMenuOpen(false)}>
+              Pricing
+            </a>
+            <a href="/login" onClick={() => setMenuOpen(false)}>
+              Sign in
+            </a>
+            <a
+              href="/signup"
+              className="button"
+              onClick={() => setMenuOpen(false)}
+            >
+              Get Started →
+            </a>
+          </nav>
         )}
 
         <section className="hero">
           <div className="badge">
-            <span className="dot"></span>
+            <span className="badge-dot"></span>
             AI-powered creative studio
           </div>
 
           <h1>
-            Turn your ideas into{" "}
-            <span className="gradientText">incredible worlds.</span>
+            Turn your ideas into <span className="gradient-text">incredible worlds.</span>
           </h1>
 
-          <p>
+          <p className="hero-description">
             Create stories, images and creative worlds with AI.
-            From your first idea to the finished creation, StoryForge AI
-            helps bring your imagination to life.
+            StoryForge AI brings your imagination to life with powerful
+            creative tools in one place.
           </p>
 
-          <div className="heroActions">
-            <a href="/signup" className="primary heroButton">
-              Start Creating →
+          <div className="hero-buttons">
+            <a href="/signup" className="button">
+              Start Creating <span>→</span>
             </a>
-            <a href="#features" className="secondary">
+            <a href="#features" className="button-outline">
               Explore Features
             </a>
           </div>
+
+          <p className="hero-note">
+            Your imagination. Your stories. Your creative universe.
+          </p>
         </section>
 
-        <div className="showcase">
-          <div className="window">
-            <div className="windowTop">
-              <span className="windowDot"></span>
-              <span className="windowDot"></span>
-              <span className="windowDot"></span>
+        <section className="showcase">
+          <div className="showcase-grid">
+            <div className="showcase-card">
+              <div className="card-icon">✍️</div>
+              <h3>AI Stories</h3>
+              <p>
+                Turn simple ideas into engaging stories, scripts and
+                unforgettable adventures.
+              </p>
             </div>
 
-            <div className="mockGrid">
-              <div className="mockCard">
-                <h3>✍️ AI Stories</h3>
-                <p>Generate original stories, characters and worlds from a simple idea.</p>
-              </div>
+            <div className="showcase-card">
+              <div className="card-icon">🎨</div>
+              <h3>AI Images</h3>
+              <p>
+                Bring your imagination to life with creative AI-generated
+                visual concepts.
+              </p>
+            </div>
 
-              <div className="mockCard">
-                <h3>🎨 AI Images</h3>
-                <p>Turn your imagination into stunning visual creations.</p>
-              </div>
+            <div className="showcase-card">
+              <div className="card-icon">🌌</div>
+              <h3>Creative Worlds</h3>
+              <p>
+                Build characters, explore ideas and create worlds that
+                feel uniquely yours.
+              </p>
+            </div>
 
-              <div className="mockCard">
-                <h3>🌎 Creative Worlds</h3>
-                <p>Build characters, settings and complete fictional worlds.</p>
-              </div>
-
-              <div className="mockCard">
-                <h3>📁 Your Projects</h3>
-                <p>Keep your creations organized and accessible in one place.</p>
-              </div>
+            <div className="showcase-card">
+              <div className="card-icon">📁</div>
+              <h3>Your Projects</h3>
+              <p>
+                Keep your creative work organised and return to your
+                projects whenever you want.
+              </p>
             </div>
           </div>
-        </div>
+        </section>
 
-        <section id="features">
-          <div className="sectionHeading">
-            <div className="eyebrow">Everything you need</div>
-            <h2>One creative studio.</h2>
+        <section className="section" id="features">
+          <div className="section-heading">
+            <span className="section-label">What you can create</span>
+            <h2>
+              One studio. <span className="gradient-text">Endless possibilities.</span>
+            </h2>
             <p>
-              Powerful AI tools designed to help you go from a blank page
-              to something you are proud of.
+              Everything you need to explore ideas, create content and
+              bring your imagination to life.
             </p>
           </div>
 
-          <div className="features">
-            <div className="feature">
-              <div className="featureIcon">✍️</div>
-              <h3>Story Creation</h3>
-              <p>Create stories, scripts, characters and ideas with the help of AI.</p>
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="card-icon">📖</div>
+              <h3>Story Generation</h3>
+              <p>
+                Create original stories, exciting plots, characters and
+                scripts from your own ideas.
+              </p>
             </div>
 
-            <div className="feature">
-              <div className="featureIcon">🎨</div>
-              <h3>Image Generation</h3>
-              <p>Generate beautiful images that bring your stories and ideas to life.</p>
+            <div className="feature-card">
+              <div className="card-icon">🖼️</div>
+              <h3>Creative Images</h3>
+              <p>
+                Explore visual ideas and turn your imagination into
+                beautiful creative concepts.
+              </p>
             </div>
 
-            <div className="feature">
-              <div className="featureIcon">✨</div>
-              <h3>Creative Assistant</h3>
-              <p>Brainstorm, rewrite, expand and improve your creative work whenever you need it.</p>
+            <div className="feature-card">
+              <div className="card-icon">✨</div>
+              <h3>AI Creativity</h3>
+              <p>
+                Get help developing concepts, expanding ideas and
+                discovering new creative directions.
+              </p>
+            </div>
+
+            <div className="feature-card">
+              <div className="card-icon">🎭</div>
+              <h3>Characters</h3>
+              <p>
+                Develop memorable characters with unique personalities,
+                backgrounds and stories.
+              </p>
+            </div>
+
+            <div className="feature-card">
+              <div className="card-icon">🚀</div>
+              <h3>Fast Creation</h3>
+              <p>
+                Move from a simple idea to a creative starting point
+                without complicated tools.
+              </p>
+            </div>
+
+            <div className="feature-card">
+              <div className="card-icon">📚</div>
+              <h3>Project Library</h3>
+              <p>
+                Keep your creative projects together and build on your
+                ideas over time.
+              </p>
             </div>
           </div>
         </section>
 
-        <section id="how-it-works">
-          <div className="sectionHeading">
-            <div className="eyebrow">Simple workflow</div>
-            <h2>From idea to creation.</h2>
+        <section className="section" id="how-it-works">
+          <div className="section-heading">
+            <span className="section-label">Simple creative process</span>
+            <h2>
+              From idea to <span className="gradient-text">creation.</span>
+            </h2>
+            <p>
+              You do not need to be an expert. Start with an idea and
+              let StoryForge AI help you develop it.
+            </p>
           </div>
 
           <div className="steps">
             <div className="step">
-              <div className="stepNumber">1</div>
-              <h3>Describe your idea</h3>
-              <p>Tell StoryForge what you want to create using your own words.</p>
+              <div className="step-number">01</div>
+              <h3>Bring your idea</h3>
+              <p>
+                Describe the story, character, image or creative project
+                you want to make.
+              </p>
             </div>
 
             <div className="step">
-              <div className="stepNumber">2</div>
-              <h3>Let AI create</h3>
-              <p>Our creative tools transform your idea into something extraordinary.</p>
+              <div className="step-number">02</div>
+              <h3>Let AI help</h3>
+              <p>
+                Use AI-powered creative tools to develop your idea and
+                explore new possibilities.
+              </p>
             </div>
 
             <div className="step">
-              <div className="stepNumber">3</div>
-              <h3>Make it yours</h3>
-              <p>Refine, save and continue developing your creation.</p>
+              <div className="step-number">03</div>
+              <h3>Create and save</h3>
+              <p>
+                Build on your results and keep your creative projects
+                organised.
+              </p>
             </div>
           </div>
         </section>
 
-        <section id="pricing">
-          <div className="cta">
-            <div className="eyebrow">Start creating</div>
-            <h2>Your next great idea starts here.</h2>
+        <section className="section" id="pricing">
+          <div className="section-heading">
+            <span className="section-label">Get started</span>
+            <h2>
+              Creativity starts <span className="gradient-text">here.</span>
+            </h2>
             <p>
-              Join StoryForge AI and turn your imagination into stories,
-              images and worlds.
+              Create an account and explore the StoryForge AI creative
+              studio.
             </p>
-            <a href="/signup" className="primary heroButton">
+          </div>
+
+          <div className="pricing-box">
+            <h3>Start creating with StoryForge AI</h3>
+            <p>
+              Sign up to access your creative workspace and begin
+              developing your ideas.
+            </p>
+            <a href="/signup" className="button">
               Get Started Free →
             </a>
           </div>
         </section>
 
-        <footer>
-          <div className="footerInner">
-            <div>© 2026 StoryForge AI. All rights reserved.</div>
-            <div>Turn ideas into stories, images &amp; worlds.</div>
+        <section className="cta">
+          <h2>
+            Your next great idea <span className="gradient-text">starts here.</span>
+          </h2>
+          <p>
+            Stop waiting for inspiration. Bring your ideas to StoryForge
+            AI and start creating something extraordinary.
+          </p>
+          <a href="/signup" className="button">
+            Create Your Account →
+          </a>
+        </section>
+
+        <footer className="footer">
+          <div className="footer-content">
+            <a href="/" className="logo">
+              <span className="logo-icon">✦</span>
+              <span>StoryForge AI</span>
+            </a>
+
+            <p>© 2026 StoryForge AI. All rights reserved.</p>
+
+            <div className="footer-links">
+              <a href="#features">Features</a>
+              <a href="#how-it-works">How it works</a>
+              <a href="/login">Sign in</a>
+            </div>
           </div>
         </footer>
       </div>
     </main>
   );
 }
-```
