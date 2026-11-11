@@ -1,3 +1,4 @@
+```tsx
 "use client";
 
 import { useState } from "react";
@@ -46,11 +47,12 @@ export default function Home() {
         }
 
         .navbar {
-          height: 76px;
+          min-height: 76px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           border-bottom: 1px solid rgba(255,255,255,0.08);
+          position: relative;
         }
 
         .logo {
@@ -80,7 +82,8 @@ export default function Home() {
           font-size: 14px;
         }
 
-        .navLinks a:hover {
+        .navLinks a:hover,
+        .signIn:hover {
           color: white;
         }
 
@@ -97,6 +100,9 @@ export default function Home() {
         }
 
         .primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           border: 0;
           cursor: pointer;
           color: white;
@@ -105,10 +111,12 @@ export default function Home() {
           padding: 12px 19px;
           background: linear-gradient(135deg, #7c3aed, #db2777);
           box-shadow: 0 12px 35px rgba(124, 58, 237, 0.25);
+          transition: transform 0.2s ease, opacity 0.2s ease;
         }
 
         .primary:hover {
-          transform: translateY(-1px);
+          transform: translateY(-2px);
+          opacity: 0.92;
         }
 
         .hero {
@@ -174,10 +182,12 @@ export default function Home() {
         }
 
         .secondary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
           border: 1px solid rgba(255,255,255,0.13);
           background: rgba(255,255,255,0.045);
           color: white;
-          cursor: pointer;
           padding: 15px 25px;
           border-radius: 12px;
         }
@@ -406,12 +416,15 @@ export default function Home() {
             z-index: 10;
           }
 
-          .mobileMenu a,
-          .mobileMenu button {
+          .mobileMenu a {
             display: block;
             width: 100%;
             margin: 8px 0;
-            text-align: left;
+            padding: 10px;
+          }
+
+          .mobileMenu .primary {
+            width: 100%;
           }
 
           .hero {
@@ -440,7 +453,7 @@ export default function Home() {
 
       <div className="container">
         <header className="navbar">
-          <a href="#" className="logo">
+          <a href="/" className="logo">
             <span className="logoMark">✦</span>
             StoryForge AI
           </a>
@@ -452,14 +465,16 @@ export default function Home() {
           </nav>
 
           <div className="navActions">
-            <a href="#" className="signIn">Sign in</a>
-            <button className="primary">Get Started</button>
+            <a href="/login" className="signIn">Sign in</a>
+            <a href="/signup" className="primary">Get Started</a>
           </div>
 
           <button
+            type="button"
             className="mobileButton"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label="Open menu"
+            aria-expanded={menuOpen}
           >
             ☰
           </button>
@@ -467,11 +482,11 @@ export default function Home() {
 
         {menuOpen && (
           <div className="mobileMenu">
-            <a href="#features">Features</a>
-            <a href="#how-it-works">How it works</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#">Sign in</a>
-            <button className="primary">Get Started</button>
+            <a href="#features" onClick={() => setMenuOpen(false)}>Features</a>
+            <a href="#how-it-works" onClick={() => setMenuOpen(false)}>How it works</a>
+            <a href="#pricing" onClick={() => setMenuOpen(false)}>Pricing</a>
+            <a href="/login">Sign in</a>
+            <a href="/signup" className="primary">Get Started</a>
           </div>
         )}
 
@@ -493,9 +508,9 @@ export default function Home() {
           </p>
 
           <div className="heroActions">
-            <button className="primary heroButton">
+            <a href="/signup" className="primary heroButton">
               Start Creating →
-            </button>
+            </a>
             <a href="#features" className="secondary">
               Explore Features
             </a>
@@ -513,31 +528,22 @@ export default function Home() {
             <div className="mockGrid">
               <div className="mockCard">
                 <h3>✍️ AI Stories</h3>
-                <p>
-                  Generate original stories, characters and worlds from a
-                  simple idea.
-                </p>
+                <p>Generate original stories, characters and worlds from a simple idea.</p>
               </div>
 
               <div className="mockCard">
                 <h3>🎨 AI Images</h3>
-                <p>
-                  Turn your imagination into stunning visual creations.
-                </p>
+                <p>Turn your imagination into stunning visual creations.</p>
               </div>
 
               <div className="mockCard">
                 <h3>🌎 Creative Worlds</h3>
-                <p>
-                  Build characters, settings and complete fictional worlds.
-                </p>
+                <p>Build characters, settings and complete fictional worlds.</p>
               </div>
 
               <div className="mockCard">
                 <h3>📁 Your Projects</h3>
-                <p>
-                  Keep your creations organized and accessible in one place.
-                </p>
+                <p>Keep your creations organized and accessible in one place.</p>
               </div>
             </div>
           </div>
@@ -557,28 +563,19 @@ export default function Home() {
             <div className="feature">
               <div className="featureIcon">✍️</div>
               <h3>Story Creation</h3>
-              <p>
-                Create stories, scripts, characters and ideas with the help
-                of AI.
-              </p>
+              <p>Create stories, scripts, characters and ideas with the help of AI.</p>
             </div>
 
             <div className="feature">
               <div className="featureIcon">🎨</div>
               <h3>Image Generation</h3>
-              <p>
-                Generate beautiful images that bring your stories and ideas
-                to life.
-              </p>
+              <p>Generate beautiful images that bring your stories and ideas to life.</p>
             </div>
 
             <div className="feature">
               <div className="featureIcon">✨</div>
               <h3>Creative Assistant</h3>
-              <p>
-                Brainstorm, rewrite, expand and improve your creative work
-                whenever you need it.
-              </p>
+              <p>Brainstorm, rewrite, expand and improve your creative work whenever you need it.</p>
             </div>
           </div>
         </section>
@@ -593,26 +590,19 @@ export default function Home() {
             <div className="step">
               <div className="stepNumber">1</div>
               <h3>Describe your idea</h3>
-              <p>
-                Tell StoryForge what you want to create using your own words.
-              </p>
+              <p>Tell StoryForge what you want to create using your own words.</p>
             </div>
 
             <div className="step">
               <div className="stepNumber">2</div>
               <h3>Let AI create</h3>
-              <p>
-                Our creative tools transform your idea into something
-                extraordinary.
-              </p>
+              <p>Our creative tools transform your idea into something extraordinary.</p>
             </div>
 
             <div className="step">
               <div className="stepNumber">3</div>
               <h3>Make it yours</h3>
-              <p>
-                Refine, save and continue developing your creation.
-              </p>
+              <p>Refine, save and continue developing your creation.</p>
             </div>
           </div>
         </section>
@@ -625,19 +615,20 @@ export default function Home() {
               Join StoryForge AI and turn your imagination into stories,
               images and worlds.
             </p>
-            <button className="primary heroButton">
+            <a href="/signup" className="primary heroButton">
               Get Started Free →
-            </button>
+            </a>
           </div>
         </section>
 
         <footer>
           <div className="footerInner">
             <div>© 2026 StoryForge AI. All rights reserved.</div>
-            <div>Turn ideas into stories, images & worlds.</div>
+            <div>Turn ideas into stories, images &amp; worlds.</div>
           </div>
         </footer>
       </div>
     </main>
   );
 }
+```
