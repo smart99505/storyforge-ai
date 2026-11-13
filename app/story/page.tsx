@@ -2,6 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function StoryPage() {
   const router = useRouter();
@@ -12,6 +18,7 @@ export default function StoryPage() {
   const [loading, setLoading] = useState(false);
   const [story, setStory] = useState("");
   const [error, setError] = useState("");
+  const [saveStatus, setSaveStatus] = useState("");
 
   async function generateStory() {
     if (!prompt.trim()) {
@@ -22,8 +29,21 @@ export default function StoryPage() {
     setLoading(true);
     setError("");
     setStory("");
+    setSaveStatus("");
 
     try {
+      // Check that the user is signed in
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError || !user) {
+        router.push("/login");
+        return;
+      }
+
+      // Generate the story
       const response = await fetch("/api/generate-story", {
         method: "POST",
         headers: {
@@ -42,7 +62,33 @@ export default function StoryPage() {
         throw new Error(data.error || "Something went wrong.");
       }
 
+      if (!data.story) {
+        throw new Error("No story was returned. Please try again.");
+      }
+
       setStory(data.story);
+
+      // Automatically save the generated story
+      setSaveStatus("Saving your story...");
+
+      const { error: saveError } = await supabase
+        .from("stories")
+        .insert({
+          user_id: user.id,
+          prompt,
+          genre,
+          length,
+          story: data.story,
+        });
+
+      if (saveError) {
+        console.error("Story saving error:", saveError);
+        setSaveStatus(
+          "Your story was generated, but could not be saved. Please try again."
+        );
+      } else {
+        setSaveStatus("✓ Your story has been saved to your account!");
+      }
     } catch (err) {
       setError(
         err instanceof Error
@@ -72,6 +118,8 @@ export default function StoryPage() {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          flexWrap: "wrap",
+          gap: "15px",
         }}
       >
         <button
@@ -88,12 +136,7 @@ export default function StoryPage() {
           ← Dashboard
         </button>
 
-        <div
-          style={{
-            fontSize: "24px",
-            fontWeight: "800",
-          }}
-        >
+        <div style={{ fontSize: "24px", fontWeight: "800" }}>
           StoryForge <span style={{ color: "#c084fc" }}>AI</span>
         </div>
       </header>
@@ -116,21 +159,11 @@ export default function StoryPage() {
             AI STORY STUDIO
           </p>
 
-          <h1
-            style={{
-              fontSize: "46px",
-              margin: "10px 0",
-            }}
-          >
+          <h1 style={{ fontSize: "46px", margin: "10px 0" }}>
             Turn an idea into a story.
           </h1>
 
-          <p
-            style={{
-              color: "#aaa",
-              fontSize: "17px",
-            }}
-          >
+          <p style={{ color: "#aaa", fontSize: "17px" }}>
             Describe your idea and let StoryForge AI bring it to life.
           </p>
         </div>
@@ -248,12 +281,7 @@ export default function StoryPage() {
           </div>
 
           {error && (
-            <p
-              style={{
-                color: "#f87171",
-                marginTop: "20px",
-              }}
-            >
+            <p style={{ color: "#f87171", marginTop: "20px" }}>
               {error}
             </p>
           )}
@@ -297,6 +325,16 @@ export default function StoryPage() {
             >
               Your Story
             </h2>
+
+            <p
+              style={{
+                color: "#86efac",
+                fontSize: "14px",
+                fontWeight: "700",
+              }}
+            >
+              {saveStatus}
+            </p>
 
             <div
               style={{
