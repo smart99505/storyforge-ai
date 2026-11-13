@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 
 declare global {
   interface Window {
@@ -16,6 +17,11 @@ declare global {
   }
 }
 
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function ImagesPage() {
   const router = useRouter();
 
@@ -25,6 +31,7 @@ export default function ImagesPage() {
   const [testMode, setTestMode] = useState(true);
   const [image, setImage] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [scriptReady, setScriptReady] = useState(false);
 
@@ -46,10 +53,9 @@ export default function ImagesPage() {
     const script = document.createElement("script");
     script.src = "https://js.puter.com/v2/";
     script.async = true;
-
     script.onload = () => setScriptReady(true);
     script.onerror = () =>
-      setMessage("Unable to load the image service. Please refresh.");
+      setMessage("Unable to load image service. Please refresh.");
 
     document.body.appendChild(script);
 
@@ -66,7 +72,7 @@ export default function ImagesPage() {
     }
 
     if (!window.puter) {
-      setMessage("Image service is still loading. Please wait.");
+      setMessage("Image service is still loading.");
       return;
     }
 
@@ -95,9 +101,10 @@ export default function ImagesPage() {
       }
 
       setImage(result.src);
+
       setMessage(
         testMode
-          ? "Your free test preview is ready. It is a sample, not a prompt-specific AI image."
+          ? "Your free sample preview is ready."
           : "Your AI image has been generated successfully!"
       );
     } catch (error) {
@@ -107,6 +114,72 @@ export default function ImagesPage() {
       setMessage(`Image generation failed: ${details}`);
     } finally {
       setGenerating(false);
+    }
+  }
+
+  async function saveImage() {
+    if (!image) return;
+
+    setSaving(true);
+    setMessage("");
+
+    try {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        setMessage("Please log in again before saving your image.");
+        return;
+      }
+
+      const response = await fetch(image);
+
+      if (!response.ok) {
+        throw new Error("Could not access the generated image.");
+      }
+
+      const blob = await response.blob();
+
+      const extension = blob.type.includes("jpeg") ? "jpg" : "png";
+
+      const filePath = `${user.id}/${Date.now()}.${extension}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("storyforge-images")
+        .upload(filePath, blob, {
+          contentType: blob.type || "image/png",
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { error: databaseError } = await supabase
+        .from("generated_images")
+        .insert({
+          user_id: user.id,
+          prompt: prompt.trim(),
+          style,
+          image_path: filePath,
+        });
+
+      if (databaseError) {
+        await supabase.storage
+          .from("storyforge-images")
+          .remove([filePath]);
+
+        throw databaseError;
+      }
+
+      setMessage("Image saved successfully! Visit My Image Gallery to view it.");
+    } catch (error) {
+      const details =
+        error instanceof Error ? error.message : "Please try again.";
+
+      setMessage(`Unable to save image: ${details}`);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -134,6 +207,13 @@ export default function ImagesPage() {
         <a href="/dashboard" style={styles.logo}>
           StoryForge <span style={{ color: "#c084fc" }}>AI</span>
         </a>
+
+        <button
+          onClick={() => router.push("/gallery")}
+          style={styles.backButton}
+        >
+          My Gallery
+        </button>
       </header>
 
       <section style={styles.container}>
@@ -142,26 +222,22 @@ export default function ImagesPage() {
         <h1 style={styles.heading}>AI Image Generator</h1>
 
         <p style={styles.description}>
-          Bring your imagination to life. Describe an image, choose
-          your preferred style and create something extraordinary.
+          Bring your imagination to life. Describe an image,
+          choose your preferred style and create something extraordinary.
         </p>
 
         <div style={styles.workspace}>
           <div style={styles.controls}>
-            <label style={styles.fieldLabel}>
-              Describe your image
-            </label>
+            <label style={styles.fieldLabel}>Describe your image</label>
 
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Example: A beautiful futuristic city at sunset, flying cars, glowing buildings and cinematic lighting..."
+              placeholder="Example: A beautiful futuristic city at sunset..."
               style={styles.textarea}
             />
 
-            <label style={styles.fieldLabel}>
-              Choose an image style
-            </label>
+            <label style={styles.fieldLabel}>Choose an image style</label>
 
             <select
               value={style}
@@ -178,9 +254,7 @@ export default function ImagesPage() {
               <option>Cinematic</option>
             </select>
 
-            <label style={styles.fieldLabel}>
-              Image dimensions
-            </label>
+            <label style={styles.fieldLabel}>Image dimensions</label>
 
             <select
               value={ratio}
@@ -199,39 +273,32 @@ export default function ImagesPage() {
                   checked={testMode}
                   onChange={(e) => setTestMode(e.target.checked)}
                 />
-
                 Free test preview
               </label>
 
               <p style={styles.modeDescription}>
                 {testMode
-                  ? "Free sample mode. No AI image credits are used, but the sample will not match your prompt."
-                  : "Real AI generation. Your Puter account handles any applicable usage charges or free allowance."}
+                  ? "Free sample mode. The sample will not match your prompt."
+                  : "Actual AI generation. Your Puter account handles applicable usage."}
               </p>
             </div>
 
             <button
               onClick={generateImage}
               disabled={generating || !scriptReady}
-              style={{
-                ...styles.generateButton,
-                opacity: generating || !scriptReady ? 0.6 : 1,
-              }}
+              style={styles.generateButton}
             >
               {generating
                 ? "Creating your image..."
                 : !scriptReady
                 ? "Loading image service..."
-                : testMode
-                ? "Generate Free Test Preview →"
                 : "Generate AI Image →"}
             </button>
 
             {!testMode && (
               <p style={styles.warning}>
-                Actual image generation may use your Puter account's
-                free allowance or incur charges. Check the model and
-                account terms before generating.
+                Actual generation may use your Puter free allowance
+                or incur charges.
               </p>
             )}
           </div>
@@ -243,9 +310,6 @@ export default function ImagesPage() {
               <div style={styles.placeholder}>
                 <div style={{ fontSize: "45px" }}>✨</div>
                 <p>Creating your image...</p>
-                <p style={styles.smallText}>
-                  Please wait while the image service works.
-                </p>
               </div>
             ) : image ? (
               <div>
@@ -261,23 +325,26 @@ export default function ImagesPage() {
                 >
                   Download Image ↓
                 </button>
+
+                <button
+                  onClick={saveImage}
+                  disabled={saving}
+                  style={styles.saveButton}
+                >
+                  {saving ? "Saving Image..." : "♡ Save to My Gallery"}
+                </button>
               </div>
             ) : (
               <div style={styles.placeholder}>
                 <div style={{ fontSize: "55px" }}>🎨</div>
                 <h3>Your image will appear here</h3>
                 <p style={styles.smallText}>
-                  Enter a description and click the generate button
-                  to get started.
+                  Enter a description and generate your image.
                 </p>
               </div>
             )}
 
-            {message && (
-              <div style={styles.message}>
-                {message}
-              </div>
-            )}
+            {message && <div style={styles.message}>{message}</div>}
           </div>
         </div>
 
@@ -285,8 +352,7 @@ export default function ImagesPage() {
           <h2>Tips for better images</h2>
           <p>
             Describe your subject, background, lighting, colours,
-            atmosphere and camera angle. More detail can help produce
-            better results.
+            atmosphere and camera angle.
           </p>
         </section>
       </section>
@@ -302,7 +368,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     color: "white",
     fontFamily: "Arial, sans-serif",
   },
-
   header: {
     minHeight: "72px",
     borderBottom: "1px solid rgba(255,255,255,0.1)",
@@ -310,15 +375,14 @@ const styles: { [key: string]: React.CSSProperties } = {
     alignItems: "center",
     justifyContent: "space-between",
     padding: "0 6%",
+    gap: "10px",
   },
-
   logo: {
     fontSize: "22px",
     fontWeight: 800,
     color: "white",
     textDecoration: "none",
   },
-
   backButton: {
     background: "rgba(255,255,255,0.08)",
     border: "1px solid rgba(255,255,255,0.15)",
@@ -327,45 +391,38 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: "9px",
     cursor: "pointer",
   },
-
   container: {
     maxWidth: "1150px",
     margin: "0 auto",
     padding: "55px 24px",
   },
-
   label: {
     color: "#c084fc",
     fontSize: "12px",
     fontWeight: 800,
     letterSpacing: "1.5px",
   },
-
   heading: {
     fontSize: "clamp(32px, 5vw, 46px)",
     margin: "15px 0",
   },
-
   description: {
     color: "#aaa1b8",
     lineHeight: 1.7,
     maxWidth: "650px",
     marginBottom: "35px",
   },
-
   workspace: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
     gap: "25px",
   },
-
   controls: {
     padding: "25px",
     background: "rgba(255,255,255,0.05)",
     border: "1px solid rgba(255,255,255,0.1)",
     borderRadius: "18px",
   },
-
   fieldLabel: {
     display: "block",
     fontSize: "14px",
@@ -373,7 +430,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     marginBottom: "10px",
     marginTop: "18px",
   },
-
   textarea: {
     width: "100%",
     minHeight: "150px",
@@ -387,7 +443,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: "14px",
     lineHeight: 1.6,
   },
-
   select: {
     width: "100%",
     padding: "13px",
@@ -396,7 +451,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     background: "#100b19",
     color: "white",
   },
-
   modeBox: {
     marginTop: "22px",
     padding: "15px",
@@ -404,7 +458,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     background: "rgba(139,92,246,0.1)",
     border: "1px solid rgba(192,132,252,0.25)",
   },
-
   modeLabel: {
     display: "flex",
     alignItems: "center",
@@ -413,14 +466,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: "14px",
     cursor: "pointer",
   },
-
   modeDescription: {
     color: "#aaa1b8",
     fontSize: "12px",
     lineHeight: 1.6,
-    marginBottom: 0,
   },
-
   generateButton: {
     width: "100%",
     padding: "15px",
@@ -432,13 +482,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: "pointer",
     marginTop: "22px",
   },
-
   warning: {
     color: "#fbbf24",
     fontSize: "12px",
     lineHeight: 1.6,
   },
-
   preview: {
     padding: "25px",
     borderRadius: "18px",
@@ -446,13 +494,11 @@ const styles: { [key: string]: React.CSSProperties } = {
     border: "1px solid rgba(255,255,255,0.1)",
     minHeight: "430px",
   },
-
   previewHeading: {
     fontSize: "20px",
     marginTop: 0,
     marginBottom: "20px",
   },
-
   placeholder: {
     minHeight: "340px",
     display: "flex",
@@ -465,14 +511,12 @@ const styles: { [key: string]: React.CSSProperties } = {
     padding: "20px",
     color: "#ddd",
   },
-
   smallText: {
     color: "#aaa1b8",
     fontSize: "13px",
     lineHeight: 1.7,
     maxWidth: "300px",
   },
-
   generatedImage: {
     display: "block",
     width: "100%",
@@ -481,7 +525,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRadius: "12px",
     background: "#08050f",
   },
-
   downloadButton: {
     width: "100%",
     padding: "13px",
@@ -493,7 +536,17 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: "pointer",
     marginTop: "15px",
   },
-
+  saveButton: {
+    width: "100%",
+    padding: "13px",
+    border: "1px solid #c084fc",
+    borderRadius: "10px",
+    background: "rgba(192,132,252,0.15)",
+    color: "white",
+    fontWeight: 700,
+    cursor: "pointer",
+    marginTop: "10px",
+  },
   message: {
     marginTop: "18px",
     padding: "13px",
@@ -503,7 +556,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: "13px",
     lineHeight: 1.6,
   },
-
   tips: {
     marginTop: "40px",
     padding: "25px",
