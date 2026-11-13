@@ -52,9 +52,7 @@ export default function DashboardPage() {
         .order("created_at", { ascending: false });
 
       if (storiesError) {
-        setNotice(
-          "We couldn't load your saved stories. Please check your database setup."
-        );
+        setNotice("We couldn't load your saved stories. Please try again.");
       } else {
         setStories((data ?? []) as Story[]);
       }
@@ -82,6 +80,10 @@ export default function DashboardPage() {
 
   function openStoryCreator() {
     router.push("/story");
+  }
+
+  function openImageCreator() {
+    router.push("/images");
   }
 
   function showComingSoon(feature: string) {
@@ -215,16 +217,15 @@ export default function DashboardPage() {
 
             <p style={styles.cardDescription}>
               Turn your ideas into stunning AI-generated visual concepts.
+              Choose styles and create images from your imagination.
             </p>
 
             <button
-              onClick={() => showComingSoon("AI Image Generation")}
-              style={styles.secondaryButton}
+              onClick={openImageCreator}
+              style={styles.primaryButton}
             >
               Create an image →
             </button>
-
-            <span style={styles.comingSoon}>COMING SOON</span>
           </div>
 
           <div style={styles.card}>
@@ -391,6 +392,13 @@ export default function DashboardPage() {
             style={styles.primaryButton}
           >
             Start creating →
+          </button>
+
+          <button
+            onClick={openImageCreator}
+            style={styles.secondaryButton}
+          >
+            Explore AI Images →
           </button>
         </section>
       </section>
