@@ -12,70 +12,61 @@ const supabase = createClient(
 
 type Story = {
   id: string;
-  prompt: string;
-  genre: string;
-  length: string;
-  story: string;
-  created_at: string;
+  title?: string;
+  content?: string;
+  story?: string;
+  created_at?: string;
 };
 
 export default function DashboardPage() {
   const router = useRouter();
 
   const [email, setEmail] = useState("");
+  const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loggingOut, setLoggingOut] = useState(false);
+  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
   const [notice, setNotice] = useState("");
 
-  const [stories, setStories] = useState<Story[]>([]);
-  const [loadingStories, setLoadingStories] = useState(true);
-  const [selectedStory, setSelectedStory] = useState<Story | null>(null);
-  const [deletingId, setDeletingId] = useState("");
-
   useEffect(() => {
-    async function loadDashboard() {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
+    checkUser();
+  }, []);
 
-      if (error || !user) {
-        router.replace("/login");
-        return;
-      }
+  async function checkUser() {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
 
-      setEmail(user.email ?? "");
-
-      const { data, error: storiesError } = await supabase
-        .from("stories")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (storiesError) {
-        setNotice("We couldn't load your saved stories. Please try again.");
-      } else {
-        setStories((data ?? []) as Story[]);
-      }
-
-      setLoadingStories(false);
-      setLoading(false);
-    }
-
-    loadDashboard();
-  }, [router]);
-
-  async function handleLogout() {
-    setLoggingOut(true);
-
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      setNotice(error.message);
-      setLoggingOut(false);
+    if (error || !user) {
+      router.push("/login");
       return;
     }
 
-    router.replace("/login");
+    setEmail(user.email || "");
+
+    await fetchStories(user.id);
+
+    setLoading(false);
+  }
+
+  async function fetchStories(userId: string) {
+    const { data, error } = await supabase
+      .from("stories")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching stories:", error.message);
+      return;
+    }
+
+    setStories(data || []);
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    router.push("/login");
   }
 
   function openStoryCreator() {
@@ -86,181 +77,177 @@ export default function DashboardPage() {
     router.push("/images");
   }
 
-  function showComingSoon(feature: string) {
-    setNotice(
-      `${feature} is coming soon. We're working on bringing this feature to StoryForge AI.`
-    );
+  function openImageGallery() {
+    router.push("/gallery");
   }
 
-  async function deleteStory(storyId: string) {
+  function openWorlds() {
+    setNotice("Creative Worlds is coming soon!");
+  }
+
+  async function deleteStory(id: string) {
     const confirmed = window.confirm(
-      "Are you sure you want to permanently delete this story?"
+      "Are you sure you want to delete this story?"
     );
 
     if (!confirmed) return;
 
-    setDeletingId(storyId);
-    setNotice("");
-
     const { error } = await supabase
       .from("stories")
       .delete()
-      .eq("id", storyId);
+      .eq("id", id);
 
     if (error) {
-      setNotice("Unable to delete this story. Please try again.");
-      setDeletingId("");
+      alert("Unable to delete story. Please try again.");
+      console.error(error.message);
       return;
     }
 
-    setStories((previous) =>
-      previous.filter((story) => story.id !== storyId)
-    );
+    setStories((previous) => previous.filter((story) => story.id !== id));
 
-    if (selectedStory?.id === storyId) {
+    if (selectedStory?.id === id) {
       setSelectedStory(null);
     }
-
-    setNotice("Your story has been deleted.");
-    setDeletingId("");
-  }
-
-  function formatDate(date: string) {
-    return new Date(date).toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
   }
 
   if (loading) {
     return (
-      <main style={styles.loading}>
-        Loading your workspace...
+      <main style={styles.loadingPage}>
+        <div style={styles.loadingText}>Loading your dashboard...</div>
       </main>
     );
   }
 
   return (
     <main style={styles.page}>
-      <header style={styles.header}>
-        <a href="/dashboard" style={styles.logo}>
-          StoryForge <span style={{ color: "#c084fc" }}>AI</span>
-        </a>
+      <div style={styles.container}>
+        {/* HEADER */}
+        <header style={styles.header}>
+          <div>
+            <h1 style={styles.logo}>
+              StoryForge <span style={styles.logoAccent}>AI</span>
+            </h1>
+            <p style={styles.headerSubtitle}>Your creative studio</p>
+          </div>
 
-        <button
-          onClick={handleLogout}
-          disabled={loggingOut}
-          style={styles.logout}
-        >
-          {loggingOut ? "Logging out..." : "Log out"}
-        </button>
-      </header>
+          <div style={styles.headerRight}>
+            <span style={styles.userEmail}>{email}</span>
 
-      <section style={styles.container}>
-        <p style={styles.label}>YOUR CREATIVE WORKSPACE</p>
+            <button onClick={logout} style={styles.logoutButton}>
+              Log Out
+            </button>
+          </div>
+        </header>
 
-        <h1 style={styles.heading}>
-          Welcome to StoryForge AI.
-        </h1>
+        {/* WELCOME */}
+        <section style={styles.welcome}>
+          <div>
+            <p style={styles.eyebrow}>YOUR CREATIVE SPACE</p>
 
-        <p style={styles.email}>
-          Signed in as {email}
-        </p>
+            <h2 style={styles.welcomeTitle}>
+              Welcome back to <span style={styles.purple}>StoryForge AI</span>
+            </h2>
 
-        <p style={styles.description}>
-          Turn your ideas into stories, images and entire creative worlds
-          from one powerful workspace.
-        </p>
+            <p style={styles.welcomeText}>
+              Turn your imagination into stories, images and creative worlds.
+              What would you like to create today?
+            </p>
+          </div>
 
+          <button onClick={openStoryCreator} style={styles.primaryButton}>
+            + Create a Story
+          </button>
+        </section>
+
+        {/* NOTICE */}
         {notice && (
           <div style={styles.notice}>
-            <span>{notice}</span>
-
+            {notice}
             <button
               onClick={() => setNotice("")}
-              style={styles.closeNotice}
-              aria-label="Dismiss message"
+              style={styles.noticeClose}
             >
               ×
             </button>
           </div>
         )}
 
-        <h2 style={styles.sectionHeading}>
-          What would you like to create?
-        </h2>
-
-        <div style={styles.grid}>
+        {/* FEATURE CARDS */}
+        <section style={styles.cards}>
+          {/* AI STORIES */}
           <div style={styles.card}>
-            <div style={styles.icon}>✍️</div>
+            <div style={styles.cardIcon}>📖</div>
 
-            <h2 style={styles.cardTitle}>AI Stories</h2>
+            <h3 style={styles.cardTitle}>AI Stories</h3>
 
-            <p style={styles.cardDescription}>
-              Create stories, scripts, characters and creative concepts
-              with AI.
+            <p style={styles.cardText}>
+              Create original stories using your imagination and AI.
+              Bring your ideas to life in seconds.
             </p>
 
             <button
               onClick={openStoryCreator}
               style={styles.primaryButton}
             >
-              Create a story →
+              Create a Story →
             </button>
           </div>
 
+          {/* AI IMAGES */}
           <div style={styles.card}>
-            <div style={styles.icon}>🎨</div>
+            <div style={styles.cardIcon}>🎨</div>
 
-            <h2 style={styles.cardTitle}>AI Images</h2>
+            <h3 style={styles.cardTitle}>AI Images</h3>
 
-            <p style={styles.cardDescription}>
-              Turn your ideas into stunning AI-generated visual concepts.
-              Choose styles and create images from your imagination.
+            <p style={styles.cardText}>
+              Transform your ideas into beautiful AI-generated images.
+              Explore different styles and creative possibilities.
             </p>
 
             <button
               onClick={openImageCreator}
               style={styles.primaryButton}
             >
-              Create an image →
+              Create an Image →
+            </button>
+
+            <button
+              onClick={openImageGallery}
+              style={styles.secondaryButton}
+            >
+              My Image Gallery →
             </button>
           </div>
 
+          {/* CREATIVE WORLDS */}
           <div style={styles.card}>
-            <div style={styles.icon}>🌎</div>
+            <div style={styles.cardIcon}>🌍</div>
 
-            <h2 style={styles.cardTitle}>Creative Worlds</h2>
+            <h3 style={styles.cardTitle}>Creative Worlds</h3>
 
-            <p style={styles.cardDescription}>
-              Build characters, settings and interconnected fictional worlds.
+            <p style={styles.cardText}>
+              Explore new creative possibilities and build imaginative
+              worlds. More features are coming soon.
             </p>
 
             <button
-              onClick={() => showComingSoon("Creative Worlds")}
+              onClick={openWorlds}
               style={styles.secondaryButton}
             >
-              Build a world →
+              Coming Soon
             </button>
-
-            <span style={styles.comingSoon}>COMING SOON</span>
           </div>
-        </div>
+        </section>
 
-        {/* MY SAVED STORIES */}
-
+        {/* SAVED STORIES */}
         <section style={styles.savedSection}>
-          <div style={styles.savedHeader}>
+          <div style={styles.sectionHeading}>
             <div>
-              <p style={styles.label}>YOUR LIBRARY</p>
-
-              <h2 style={styles.savedHeading}>
-                My Saved Stories
-              </h2>
-
-              <p style={styles.savedDescription}>
-                All your creative work, together in one place.
+              <p style={styles.eyebrow}>YOUR LIBRARY</p>
+              <h2 style={styles.sectionTitle}>My Saved Stories</h2>
+              <p style={styles.sectionDescription}>
+                Your stories are saved here so you can read them whenever
+                you want.
               </p>
             </div>
 
@@ -269,139 +256,140 @@ export default function DashboardPage() {
             </span>
           </div>
 
-          {loadingStories ? (
+          {stories.length === 0 ? (
             <div style={styles.emptyState}>
-              Loading your saved stories...
-            </div>
-          ) : stories.length === 0 ? (
-            <div style={styles.emptyState}>
-              <div style={{ fontSize: "45px" }}>📚</div>
-
-              <h3 style={{ marginBottom: "8px" }}>
-                Your library is empty.
-              </h3>
-
-              <p style={{ color: "#aaa1b8", lineHeight: 1.7 }}>
-                The stories you create and save will appear here.
-                Start creating your first story today.
+              <div style={styles.emptyIcon}>📚</div>
+              <h3>No saved stories yet</h3>
+              <p>
+                Your creative journey starts here. Create your first story
+                and it will appear in this section.
               </p>
 
               <button
                 onClick={openStoryCreator}
                 style={styles.primaryButton}
               >
-                Create your first story →
+                Create Your First Story
               </button>
             </div>
           ) : (
             <div style={styles.storyGrid}>
-              {stories.map((item) => (
-                <div key={item.id} style={styles.storyCard}>
-                  <div style={styles.storyIcon}>📖</div>
-
-                  <span style={styles.genre}>
-                    {item.genre}
-                  </span>
+              {stories.map((story) => (
+                <div key={story.id} style={styles.storyCard}>
+                  <div style={styles.storyIcon}>📘</div>
 
                   <h3 style={styles.storyTitle}>
-                    {item.prompt.length > 65
-                      ? item.prompt.substring(0, 65) + "..."
-                      : item.prompt}
+                    {story.title || "Untitled Story"}
                   </h3>
 
-                  <p style={styles.storyMeta}>
-                    {item.length} story
-                  </p>
-
                   <p style={styles.storyDate}>
-                    Created {formatDate(item.created_at)}
+                    {story.created_at
+                      ? new Date(story.created_at).toLocaleDateString()
+                      : "Saved story"}
                   </p>
 
-                  <button
-                    onClick={() => setSelectedStory(item)}
-                    style={styles.readButton}
-                  >
-                    Read Story →
-                  </button>
+                  <div style={styles.storyActions}>
+                    <button
+                      onClick={() => setSelectedStory(story)}
+                      style={styles.readButton}
+                    >
+                      Read Story
+                    </button>
 
-                  <button
-                    onClick={() => deleteStory(item.id)}
-                    disabled={deletingId === item.id}
-                    style={styles.deleteButton}
-                  >
-                    {deletingId === item.id
-                      ? "Deleting..."
-                      : "Delete Story"}
-                  </button>
+                    <button
+                      onClick={() => deleteStory(story.id)}
+                      style={styles.deleteButton}
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </section>
 
-        {/* FULL STORY VIEW */}
-
-        {selectedStory && (
-          <div style={styles.modalOverlay}>
-            <div style={styles.modal}>
-              <button
-                onClick={() => setSelectedStory(null)}
-                style={styles.modalClose}
-              >
-                ×
-              </button>
-
-              <p style={styles.label}>
-                {selectedStory.genre.toUpperCase()} STORY
-              </p>
-
-              <h2 style={styles.modalHeading}>
-                {selectedStory.prompt}
-              </h2>
-
-              <p style={styles.storyDate}>
-                Created {formatDate(selectedStory.created_at)}
-              </p>
-
-              <div style={styles.fullStory}>
-                {selectedStory.story}
-              </div>
-
-              <button
-                onClick={() => setSelectedStory(null)}
-                style={styles.primaryButton}
-              >
-                Close Story
-              </button>
-            </div>
-          </div>
-        )}
-
+        {/* IMAGE GALLERY SHORTCUT */}
         <section style={styles.bottomSection}>
-          <h2 style={styles.bottomHeading}>
-            Your imagination starts here.
-          </h2>
+          <div>
+            <p style={styles.eyebrow}>YOUR CREATIVE COLLECTION</p>
+            <h2 style={styles.bottomTitle}>
+              Your imagination has no limits.
+            </h2>
+            <p style={styles.bottomText}>
+              Create more stories and images, and keep all your creations
+              together in your personal studio.
+            </p>
+          </div>
 
-          <p style={styles.bottomDescription}>
-            Start with a simple idea. Let StoryForge AI help you turn it
-            into something extraordinary.
-          </p>
+          <div style={styles.bottomButtons}>
+            <button
+              onClick={openStoryCreator}
+              style={styles.primaryButton}
+            >
+              Start Creating →
+            </button>
 
-          <button
-            onClick={openStoryCreator}
-            style={styles.primaryButton}
-          >
-            Start creating →
-          </button>
+            <button
+              onClick={openImageCreator}
+              style={styles.secondaryButton}
+            >
+              Explore AI Images →
+            </button>
 
-          <button
-            onClick={openImageCreator}
-            style={styles.secondaryButton}
-          >
-            Explore AI Images →
-          </button>
+            <button
+              onClick={openImageGallery}
+              style={styles.secondaryButton}
+            >
+              View My Image Gallery →
+            </button>
+          </div>
         </section>
-      </section>
+
+        {/* FOOTER */}
+        <footer style={styles.footer}>
+          <p>© 2026 StoryForge AI. All rights reserved.</p>
+        </footer>
+      </div>
+
+      {/* READ STORY MODAL */}
+      {selectedStory && (
+        <div
+          style={styles.modalOverlay}
+          onClick={() => setSelectedStory(null)}
+        >
+          <div
+            style={styles.modal}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              onClick={() => setSelectedStory(null)}
+              style={styles.modalClose}
+            >
+              ×
+            </button>
+
+            <p style={styles.eyebrow}>YOUR SAVED STORY</p>
+
+            <h2 style={styles.modalTitle}>
+              {selectedStory.title || "Untitled Story"}
+            </h2>
+
+            <div style={styles.modalContent}>
+              {selectedStory.content ||
+                selectedStory.story ||
+                "No story content was found."}
+            </div>
+
+            <button
+              onClick={() => setSelectedStory(null)}
+              style={styles.primaryButton}
+            >
+              Close Story
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
@@ -409,175 +397,197 @@ export default function DashboardPage() {
 const styles: { [key: string]: CSSProperties } = {
   page: {
     minHeight: "100vh",
-    background:
-      "radial-gradient(circle at top right, #24104d 0%, #08050f 45%, #050308 100%)",
-    color: "white",
+    background: "#09090f",
+    color: "#ffffff",
+    padding: "30px 20px",
     fontFamily: "Arial, sans-serif",
-  },
-
-  loading: {
-    minHeight: "100vh",
-    background: "#08050f",
-    color: "white",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: "Arial, sans-serif",
-  },
-
-  header: {
-    minHeight: "72px",
-    borderBottom: "1px solid rgba(255,255,255,0.1)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0 6%",
-  },
-
-  logo: {
-    fontSize: "22px",
-    fontWeight: 800,
-    color: "white",
-    textDecoration: "none",
-  },
-
-  logout: {
-    border: "1px solid rgba(255,255,255,0.18)",
-    background: "rgba(255,255,255,0.06)",
-    color: "white",
-    padding: "10px 18px",
-    borderRadius: "10px",
-    cursor: "pointer",
   },
 
   container: {
-    maxWidth: "1100px",
+    maxWidth: "1200px",
     margin: "0 auto",
-    padding: "60px 24px",
   },
 
-  label: {
-    color: "#c084fc",
+  loadingPage: {
+    minHeight: "100vh",
+    background: "#09090f",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    color: "#ffffff",
+    fontFamily: "Arial, sans-serif",
+  },
+
+  loadingText: {
+    fontSize: "18px",
+    color: "#c4b5fd",
+  },
+
+  header: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "20px",
+    flexWrap: "wrap",
+    paddingBottom: "25px",
+    borderBottom: "1px solid #272333",
+  },
+
+  logo: {
+    fontSize: "27px",
+    fontWeight: 800,
+    margin: 0,
+  },
+
+  logoAccent: {
+    color: "#a78bfa",
+  },
+
+  headerSubtitle: {
+    color: "#9993aa",
+    fontSize: "13px",
+    margin: "5px 0 0",
+  },
+
+  headerRight: {
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
+    flexWrap: "wrap",
+  },
+
+  userEmail: {
+    color: "#c4b5fd",
+    fontSize: "13px",
+  },
+
+  logoutButton: {
+    background: "transparent",
+    color: "#ffffff",
+    border: "1px solid #51456c",
+    borderRadius: "9px",
+    padding: "10px 17px",
+    cursor: "pointer",
+  },
+
+  welcome: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "25px",
+    flexWrap: "wrap",
+    padding: "55px 0 40px",
+  },
+
+  eyebrow: {
+    color: "#a78bfa",
+    fontSize: "11px",
     fontWeight: 700,
-    marginBottom: "10px",
-    letterSpacing: "1.5px",
-    fontSize: "12px",
-  },
-
-  heading: {
-    fontSize: "clamp(32px, 5vw, 46px)",
-    lineHeight: 1.1,
-    margin: "0 0 12px",
-  },
-
-  email: {
-    color: "#c084fc",
-    fontSize: "14px",
+    letterSpacing: "2px",
     marginBottom: "12px",
   },
 
-  description: {
-    color: "#aaa1b8",
-    maxWidth: "650px",
+  welcomeTitle: {
+    fontSize: "clamp(27px, 4vw, 39px)",
+    lineHeight: 1.2,
+    margin: "0 0 14px",
+  },
+
+  purple: {
+    color: "#a78bfa",
+  },
+
+  welcomeText: {
+    color: "#aaa4b8",
+    fontSize: "15px",
     lineHeight: 1.7,
-    marginBottom: "45px",
+    maxWidth: "600px",
   },
 
-  sectionHeading: {
-    fontSize: "23px",
-    marginBottom: "22px",
+  primaryButton: {
+    background: "linear-gradient(135deg, #8b5cf6, #6d28d9)",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: "10px",
+    padding: "13px 20px",
+    fontSize: "14px",
+    fontWeight: 700,
+    cursor: "pointer",
   },
 
-  grid: {
+  secondaryButton: {
+    background: "#211b30",
+    color: "#c4b5fd",
+    border: "1px solid #51416e",
+    borderRadius: "10px",
+    padding: "12px 18px",
+    fontSize: "13px",
+    fontWeight: 600,
+    cursor: "pointer",
+    marginTop: "10px",
+  },
+
+  notice: {
+    background: "#211b30",
+    border: "1px solid #51416e",
+    borderRadius: "10px",
+    padding: "14px 18px",
+    color: "#ddd6fe",
+    marginBottom: "25px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+  noticeClose: {
+    background: "transparent",
+    color: "#ffffff",
+    border: "none",
+    fontSize: "22px",
+    cursor: "pointer",
+  },
+
+  cards: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
     gap: "20px",
+    marginBottom: "65px",
   },
 
   card: {
+    background: "#12111b",
+    border: "1px solid #292437",
+    borderRadius: "16px",
     padding: "28px",
-    borderRadius: "20px",
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.1)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    minHeight: "270px",
   },
 
-  icon: {
-    fontSize: "36px",
-    marginBottom: "16px",
+  cardIcon: {
+    fontSize: "34px",
+    marginBottom: "18px",
   },
 
   cardTitle: {
     fontSize: "21px",
-    marginBottom: "10px",
+    margin: "0 0 10px",
   },
 
-  cardDescription: {
-    color: "#aaa1b8",
-    lineHeight: 1.6,
-    minHeight: "68px",
+  cardText: {
+    color: "#aaa4b8",
     fontSize: "14px",
-  },
-
-  primaryButton: {
-    width: "100%",
-    padding: "13px",
-    border: "none",
-    borderRadius: "10px",
-    background: "linear-gradient(135deg, #8b5cf6, #c026d3)",
-    color: "white",
-    fontWeight: 700,
-    cursor: "pointer",
-    marginTop: "12px",
-  },
-
-  secondaryButton: {
-    width: "100%",
-    padding: "13px",
-    border: "1px solid rgba(255,255,255,0.15)",
-    borderRadius: "10px",
-    background: "rgba(255,255,255,0.08)",
-    color: "white",
-    fontWeight: 700,
-    cursor: "pointer",
-    marginTop: "12px",
-  },
-
-  comingSoon: {
-    display: "block",
-    color: "#c084fc",
-    fontSize: "10px",
-    fontWeight: 700,
-    letterSpacing: "1px",
-    marginTop: "15px",
-  },
-
-  notice: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "15px",
-    padding: "15px",
-    marginBottom: "30px",
-    borderRadius: "10px",
-    border: "1px solid rgba(192,132,252,0.3)",
-    background: "rgba(139,92,246,0.12)",
-    color: "#e9d5ff",
-    fontSize: "14px",
-  },
-
-  closeNotice: {
-    background: "transparent",
-    border: "none",
-    color: "white",
-    fontSize: "22px",
-    cursor: "pointer",
+    lineHeight: 1.7,
+    marginBottom: "22px",
+    flex: 1,
   },
 
   savedSection: {
-    marginTop: "65px",
+    paddingBottom: "65px",
   },
 
-  savedHeader: {
+  sectionHeading: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
@@ -586,171 +596,177 @@ const styles: { [key: string]: CSSProperties } = {
     marginBottom: "25px",
   },
 
-  savedHeading: {
-    fontSize: "29px",
-    margin: "5px 0 10px",
+  sectionTitle: {
+    fontSize: "27px",
+    margin: "0 0 8px",
   },
 
-  savedDescription: {
-    color: "#aaa1b8",
-    margin: 0,
+  sectionDescription: {
+    color: "#9993aa",
+    fontSize: "14px",
     lineHeight: 1.6,
   },
 
   storyCount: {
-    background: "rgba(192,132,252,0.15)",
-    border: "1px solid rgba(192,132,252,0.3)",
-    color: "#e9d5ff",
-    padding: "10px 16px",
+    background: "#211b30",
+    color: "#c4b5fd",
     borderRadius: "20px",
+    padding: "9px 15px",
     fontSize: "13px",
   },
 
   emptyState: {
     textAlign: "center",
-    padding: "45px 25px",
-    borderRadius: "20px",
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.1)",
+    padding: "45px 20px",
+    background: "#12111b",
+    border: "1px solid #292437",
+    borderRadius: "16px",
+  },
+
+  emptyIcon: {
+    fontSize: "40px",
+    marginBottom: "10px",
   },
 
   storyGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-    gap: "20px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: "18px",
   },
 
   storyCard: {
-    padding: "23px",
-    borderRadius: "18px",
-    background: "rgba(255,255,255,0.06)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
+    background: "#12111b",
+    border: "1px solid #292437",
+    borderRadius: "14px",
+    padding: "22px",
   },
 
   storyIcon: {
-    fontSize: "30px",
+    fontSize: "27px",
     marginBottom: "12px",
   },
 
-  genre: {
-    color: "#c084fc",
-    fontSize: "11px",
-    fontWeight: 800,
-    letterSpacing: "1px",
-    textTransform: "uppercase",
-  },
-
   storyTitle: {
-    fontSize: "17px",
-    lineHeight: 1.5,
-    margin: "10px 0",
-  },
-
-  storyMeta: {
-    color: "#aaa1b8",
-    fontSize: "13px",
-    margin: "0 0 8px",
+    fontSize: "18px",
+    margin: "0 0 10px",
+    overflowWrap: "anywhere",
   },
 
   storyDate: {
-    color: "#888",
+    color: "#9993aa",
     fontSize: "12px",
+    marginBottom: "18px",
+  },
+
+  storyActions: {
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap",
   },
 
   readButton: {
-    width: "100%",
-    padding: "12px",
+    background: "#6d28d9",
+    color: "#ffffff",
     border: "none",
-    borderRadius: "9px",
-    background: "#8b5cf6",
-    color: "white",
-    fontWeight: 700,
+    borderRadius: "8px",
+    padding: "9px 14px",
     cursor: "pointer",
-    marginTop: "15px",
   },
 
   deleteButton: {
-    width: "100%",
-    padding: "11px",
-    border: "1px solid rgba(248,113,113,0.35)",
-    borderRadius: "9px",
-    background: "rgba(248,113,113,0.08)",
+    background: "transparent",
     color: "#fca5a5",
-    fontWeight: 700,
+    border: "1px solid #7f3030",
+    borderRadius: "8px",
+    padding: "9px 14px",
     cursor: "pointer",
-    marginTop: "10px",
+  },
+
+  bottomSection: {
+    background: "linear-gradient(135deg, #171326, #211638)",
+    border: "1px solid #3b2d59",
+    borderRadius: "18px",
+    padding: "35px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "25px",
+    flexWrap: "wrap",
+    marginBottom: "45px",
+  },
+
+  bottomTitle: {
+    fontSize: "25px",
+    margin: "0 0 10px",
+  },
+
+  bottomText: {
+    color: "#aaa4b8",
+    fontSize: "14px",
+    lineHeight: 1.7,
+    maxWidth: "550px",
+  },
+
+  bottomButtons: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: "5px",
+  },
+
+  footer: {
+    borderTop: "1px solid #272333",
+    paddingTop: "22px",
+    textAlign: "center",
+    color: "#777184",
+    fontSize: "12px",
   },
 
   modalOverlay: {
     position: "fixed",
     inset: 0,
-    background: "rgba(0,0,0,0.85)",
-    zIndex: 1000,
+    background: "rgba(0,0,0,0.8)",
     display: "flex",
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
     padding: "20px",
+    zIndex: 1000,
   },
 
   modal: {
     position: "relative",
+    background: "#151321",
+    border: "1px solid #403454",
+    borderRadius: "16px",
+    padding: "35px",
     width: "100%",
-    maxWidth: "800px",
+    maxWidth: "750px",
     maxHeight: "85vh",
     overflowY: "auto",
-    background: "#100b19",
-    border: "1px solid #49305e",
-    borderRadius: "20px",
-    padding: "35px",
-    boxSizing: "border-box",
   },
 
   modalClose: {
     position: "absolute",
     top: "15px",
-    right: "20px",
+    right: "18px",
     background: "transparent",
     border: "none",
-    color: "white",
-    fontSize: "30px",
+    color: "#ffffff",
+    fontSize: "28px",
     cursor: "pointer",
   },
 
-  modalHeading: {
-    fontSize: "24px",
-    lineHeight: 1.5,
+  modalTitle: {
+    fontSize: "27px",
+    marginBottom: "20px",
     paddingRight: "25px",
   },
 
-  fullStory: {
-    whiteSpace: "pre-wrap",
-    color: "#e5e5e5",
-    fontSize: "16px",
+  modalContent: {
+    color: "#ded9e9",
+    fontSize: "15px",
     lineHeight: 1.9,
-    marginTop: "25px",
+    whiteSpace: "pre-wrap",
     marginBottom: "25px",
-  },
-
-  bottomSection: {
-    marginTop: "65px",
-    padding: "40px 25px",
-    borderRadius: "20px",
-    textAlign: "center",
-    border: "1px solid rgba(192,132,252,0.2)",
-    background: "rgba(139,92,246,0.08)",
-  },
-
-  bottomHeading: {
-    fontSize: "27px",
-    marginBottom: "12px",
-  },
-
-  bottomDescription: {
-    color: "#aaa1b8",
-    lineHeight: 1.7,
-    marginBottom: "20px",
   },
 };
